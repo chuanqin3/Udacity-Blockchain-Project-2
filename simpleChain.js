@@ -31,11 +31,13 @@ class Block {
 class Blockchain {
   constructor() {
     // check if we need to initiate the Genesis block
-    this.currentBlockHeight = this.getBlockHeight();
-    if (this.currentBlockHeight === -1) {
-      console.log('Adding Genesis block now...')
-      this.addBlock(this.createGenesisBlock())
-    }
+    this.getBlockHeight().then(result => {
+      console.log(result)
+      if (result === -1) {
+        console.log('Adding Genesis block now...')
+        this.addBlock(this.createGenesisBlock())
+      }
+    })
   }
 
   createGenesisBlock() {
@@ -46,14 +48,14 @@ class Blockchain {
     // UTC timestamp
     newBlock.timeStamp = new Date().getTime().toString().slice(0, -3);
     // Get the current blockchain height
-    // const currentBlockHeight = await this.getBlockHeight()
+    const currentBlockHeight = await this.getBlockHeight()
     // Set new block's height
-    newBlock.height = this.currentBlockHeight + 1;
+    newBlock.height = currentBlockHeight + 1;
 
     // If newBlock is Genesis, no previous hash; otherwise, it has a previous hash
     let prevBlock;
-    if (this.currentBlockHeight > -1) {
-      prevBlock = await this.getBlock(this.currentBlockHeight);
+    if (currentBlockHeight > -1) {
+      prevBlock = await this.getBlock(currentBlockHeight);
       newBlock.previousBlockHash = prevBlock.hash;
       newBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
     }

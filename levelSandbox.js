@@ -7,48 +7,61 @@ const chainDB = './chaindata';
 const db = level(chainDB);
 
 // Add data to levelDB with key/value pair
-function addLevelDBData(key,value){
-  db.put(key, value, function(err) {
-    if (err) return console.log('Block ' + key + ' submission failed', err);
-  })
+async function addLevelDBData(key,value){
+  // return new Promise((resolve, reject) => {
+  //   db.put(key, value, function(err) {
+  //     if (err) return console.log('Block ' + key + ' submission failed', err);
+  //     resolve();
+  //   })
+  // })
+  await db.put(key, value)
+  // return result
 }
 
 // Get data from levelDB with key
 function getLevelDBData(key){
-  db.get(key, function(err, value) {
-    if (err) return console.log('Not found!', err);
-    console.log('Value = ' + value);
-  })
+  return db.get(key)
 }
 
 // Add data to levelDB with value
-function addDataToLevelDB(value) {
-    let i = 0;
-    db.createReadStream().on('data', function(data) {
-          i++;
-        }).on('error', function(err) {
-            return console.log('Unable to read data stream!', err)
-        }).on('close', function() {
-          console.log('Block #' + i);
-          addLevelDBData(i, value);
-        });
+// This function iterates all the blocks from height 0, when it finishes the last block,
+// it will trigger the addLevelDBData() to add a new block at the end of the blockchain
+async function addBlocktoChain(value) {
+  let i = 0;
+  db.createReadStream().on('data', function(data) {
+      i++;
+    }).on('error', function(err) {
+        return console.log('Unable to read data stream!', err)
+    }).on('close', function() {
+      console.log('Block #' + i);
+      addLevelDBData(i, value);
+    });
 }
 
-/* ===== Testing ==============================================================|
-|  - Self-invoking function to add blocks to chain                             |
-|  - Learn more:                                                               |
-|   https://scottiestech.info/2014/07/01/javascript-fun-looping-with-a-delay/  |
-|                                                                              |
-|  * 100 Milliseconds loop = 36,000 blocks per hour                            |
-|     (13.89 hours for 500,000 blocks)                                         |
-|    Bitcoin blockchain adds 8640 blocks per day                               |
-|     ( new block every 10 minutes )                                           |
-|  ===========================================================================*/
+// get the blockchain height, aka the number of blocks in this chain
+function getBlockchainHeight() {
+  let height = -1;
+  return new Promise(function(resolve, reject) {
+    db.createReadStream()
+    .on('data', function (data) {
+      // count each object isnerted
+      height = height + 1
+    })
+    .on('error', function (err) {
+      // reject with error
+      console.log('Oh my!', err)
+    })
+    .on('close', function () {
+      // resolve with the count value
+      console.log('getBlockchainHeight() invoked. The block height is ', height)
+      resolve(height)
+    });
+  });
+}
 
-
-(function theLoop (i) {
-  setTimeout(function () {
-    addDataToLevelDB('Testing data');
-    if (--i) theLoop(i);
-  }, 100);
-})(10);
+module.exports = {
+  addLevelDBData,
+  getLevelDBData,
+  addBlocktoChain,
+  getBlockchainHeight,
+}

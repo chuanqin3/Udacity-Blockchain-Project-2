@@ -28,34 +28,24 @@ npm install level --save
 ## Testing
 
 To test code:
-1: Open a command prompt or shell terminal after install node.js.
-2: Enter a node session, also known as REPL (Read-Evaluate-Print-Loop).
+1. Open a command prompt or shell terminal after install node.js.
+2. Enter a node session, also known as REPL (Read-Evaluate-Print-Loop).
 ```
 node
+.load simpleChain.js
 ```
-3: Copy and paste your code into your node session
-4: Instantiate blockchain with blockchain variable
+3. The `simpleChain.js` will initiate the blockchain for you, and add 10 blocks after Genesis block
+4. Validate a block, using Genesis block as an example
 ```
-let blockchain = new Blockchain();
+chain.validateBlock(0);
 ```
-5: Generate 10 blocks using a for loop
+5. Feel free to generate another 10 (or any number you like) blocks using a for loop
 ```
 for (var i = 0; i <= 10; i++) {
   blockchain.addBlock(new Block("test data "+i));
 }
 ```
-6: Validate blockchain
+6. Validate blockchain
 ```
-blockchain.validateChain();
-```
-7: Induce errors by changing block data
-```
-let inducedErrorBlocks = [2,4,7];
-for (var i = 0; i < inducedErrorBlocks.length; i++) {
-  blockchain.chain[inducedErrorBlocks[i]].data='induced chain error';
-}
-```
-8: Validate blockchain. The chain should now fail with blocks 2,4, and 7.
-```
-blockchain.validateChain();
+chain.validateChain();
 ```

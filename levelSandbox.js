@@ -8,14 +8,7 @@ const db = level(chainDB);
 
 // Add data to levelDB with key/value pair
 async function addLevelDBData(key,value){
-  // return new Promise((resolve, reject) => {
-  //   db.put(key, value, function(err) {
-  //     if (err) return console.log('Block ' + key + ' submission failed', err);
-  //     resolve();
-  //   })
-  // })
-  await db.put(key, value)
-  // return result
+  return await db.put(key, value)
 }
 
 // Get data from levelDB with key

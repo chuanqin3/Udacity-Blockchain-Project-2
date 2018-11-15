@@ -49,3 +49,7 @@ for (var i = 0; i <= 10; i++) {
 ```
 chain.validateChain();
 ```
+7. Get Block information
+```
+chain.getBlock(0).then((c)=>{console.log(c)});
+```

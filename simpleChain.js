@@ -8,7 +8,7 @@ const SHA256 = require('crypto-js/sha256');
 |  For simplicity, no DB setup here             |
 |  ===========================================*/
 
-const db2 = require('./levelSandbox.js')
+const db = require('./levelSandbox.js')
 
 /* ===== Block Class ==============================
 |  Class with a constructor for block 			       |
@@ -62,7 +62,7 @@ class Blockchain {
     }
 
     // register new block to the chain
-    db2.addBlocktoChain(JSON.stringify(newBlock));
+    db.addBlocktoChain(JSON.stringify(newBlock));
 
     // return a value for test function to print
     return JSON.stringify(newBlock).toString()
@@ -70,31 +70,44 @@ class Blockchain {
 
   // get block data
   async getBlock(blockHeight) {
-    let block = await db2.getLevelDBData(blockHeight)
-    return JSON.parse(block)
+    try {
+      let block = await db.getLevelDBData(blockHeight)
+      // return a JavaScript Object
+      return JSON.parse(block)
+    } catch(err) {
+      console.log('Having error with getting block data. Error: '+err);
+    }
   }
 
   // get blockchain height
   async getBlockHeight() {
-    return await db2.getBlockchainHeight()
+    try {
+      return await db.getBlockchainHeight()
+    } catch(err) {
+      console.log('Having error with getting blockchain height. Error: '+err);
+    }
   }
 
   // validate block
   async validateBlock(blockHeight) {
-    let block = await this.getBlock(blockHeight)
-    // get block hash
-    let blockHash = block.hash;
-    // remove block hash to test block integrity
-    block.hash = '';
-    // generate block hash
-    let validBlockHash = SHA256(JSON.stringify(block)).toString();
-    // Compare
-    if (blockHash === validBlockHash) {
-      console.log('Block #'+blockHeight+' is valid.')
-      return true
-    } else {
-      console.log('Block #'+blockHeight+' invalid hash:\n'+blockHash+' <> '+validBlockHash);
-      return false
+    try {
+      let block = await this.getBlock(blockHeight)
+      // get block hash
+      let blockHash = block.hash;
+      // remove block hash to test block integrity
+      block.hash = '';
+      // generate block hash
+      let validBlockHash = SHA256(JSON.stringify(block)).toString();
+      // Compare
+      if (blockHash === validBlockHash) {
+        console.log('Block #'+blockHeight+' is valid.')
+        return true
+      } else {
+        console.log('Block #'+blockHeight+' invalid hash:\n'+blockHash+' <> '+validBlockHash);
+        return false
+      }
+    } catch(err) {
+      console.log('Having error with getting blockchain height. Error: '+err);
     }
   }
 

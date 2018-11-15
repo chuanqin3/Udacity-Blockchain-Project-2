@@ -8,7 +8,11 @@ const db = level(chainDB);
 
 // Add data to levelDB with key/value pair
 async function addLevelDBData(key,value){
-  return await db.put(key, value)
+  try {
+    return await db.put(key, value)
+  } catch(err) {
+    console.log('Having error with adding data to DB. Error: '+err);
+  }
 }
 
 // Get data from levelDB with key
@@ -53,7 +57,6 @@ function getBlockchainHeight() {
 }
 
 module.exports = {
-  addLevelDBData,
   getLevelDBData,
   addBlocktoChain,
   getBlockchainHeight,

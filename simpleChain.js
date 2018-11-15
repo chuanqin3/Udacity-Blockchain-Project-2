@@ -44,28 +44,33 @@ class Blockchain {
   }
 
   async addBlock(newBlock) {
-    // UTC timestamp
-    newBlock.timeStamp = new Date().getTime().toString().slice(0, -3);
-    // Get the current blockchain height
-    const currentBlockHeight = await this.getBlockHeight()
-    // Set new block's height
-    newBlock.height = currentBlockHeight + 1;
+    try {
+      // UTC timestamp
+      newBlock.timeStamp = new Date().getTime().toString().slice(0, -3);
+      // Get the current blockchain height
+      const currentBlockHeight = await this.getBlockHeight()
+      // Set new block's height
+      newBlock.height = currentBlockHeight + 1;
 
-    // If newBlock is Genesis, no previous hash; otherwise, it has a previous hash
-    let prevBlock;
-    if (currentBlockHeight > -1) {
-      prevBlock = await this.getBlock(currentBlockHeight);
-      newBlock.previousBlockHash = prevBlock.hash;
-      newBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
-    } else {
-      newBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
+      // If newBlock is Genesis, no previous hash; otherwise, it has a previous hash
+      let prevBlock;
+      if (currentBlockHeight > -1) {
+        prevBlock = await this.getBlock(currentBlockHeight);
+        newBlock.previousBlockHash = prevBlock.hash;
+        newBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
+      } else {
+        newBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
+      }
+
+      // register new block to the chain
+      db.addBlocktoChain(JSON.stringify(newBlock));
+
+      // return a value for test function to print
+      return JSON.stringify(newBlock).toString()
+
+    } catch(err) {
+      console.log('Having error with adding the block. Error: '+err);
     }
-
-    // register new block to the chain
-    db.addBlocktoChain(JSON.stringify(newBlock));
-
-    // return a value for test function to print
-    return JSON.stringify(newBlock).toString()
   }
 
   // get block data
@@ -107,35 +112,39 @@ class Blockchain {
         return false
       }
     } catch(err) {
-      console.log('Having error with getting blockchain height. Error: '+err);
+      console.log('Having error with validating block '+blockHeight+' Error: '+err);
     }
   }
 
   // validate chain
   async validateChain() {
-    let errorLog = [];
-    let blockHeight = await this.getBlockHeight()
-    // loop through blocks and validate one after one
-    for (var i = 0; i <= blockHeight; i++) {
-      let validateResult = await this.validateBlock(i)
-      if (validateResult === false) {
-        errorLog.push(i);
-      }
-      // compare blocks hash link; skip the last block, which has no next block
-      if (i < blockHeight) {
-        let currentHash = await this.getBlock(i).hash;
-        let previousHash = await this.getBlock(i+1).previousBlockHash;
-        if (currentHash !== previousHash) {
+    try {
+      let errorLog = [];
+      let blockHeight = await this.getBlockHeight()
+      // loop through blocks and validate one after one
+      for (var i = 0; i <= blockHeight; i++) {
+        let validateResult = await this.validateBlock(i)
+        if (validateResult === false) {
           errorLog.push(i);
         }
+        // compare blocks hash link; skip the last block, which has no next block
+        if (i < blockHeight) {
+          let currentHash = await this.getBlock(i).hash;
+          let previousHash = await this.getBlock(i+1).previousBlockHash;
+          if (currentHash !== previousHash) {
+            errorLog.push(i);
+          }
+        }
       }
-    }
-    // report the result
-    if (errorLog.length > 0) {
-      console.log('Block errors = ' + errorLog.length);
-      console.log('Blocks: ' + errorLog);
-    } else {
-      console.log('No errors detected');
+      // report the result
+      if (errorLog.length > 0) {
+        console.log('Block errors = ' + errorLog.length);
+        console.log('Blocks: ' + errorLog);
+      } else {
+        console.log('No errors detected');
+      }
+    } catch(err) {
+      console.log('Having error with validating this blockchain. Error: '+err);
     }
   }
 }
